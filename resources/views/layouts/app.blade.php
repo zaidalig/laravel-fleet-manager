@@ -19,6 +19,7 @@
         <li class="nav-item"><a href="{{ route('drivers.index') }}" class="nav-link {{ request()->routeIs('drivers.*')?'active':'' }}"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a></li>
         <li class="nav-item"><a href="{{ route('fuel-logs.index') }}" class="nav-link {{ request()->routeIs('fuel-logs.*')?'active':'' }}"><i class="fa-solid fa-gas-pump"></i><span>Fuel Logs</span></a></li>
         <li class="nav-item"><a href="{{ route('maintenance.index') }}" class="nav-link {{ request()->routeIs('maintenance.*')?'active':'' }}"><i class="fa-solid fa-wrench"></i><span>Maintenance</span></a></li>
+        <li class="nav-item"><a href="{{ route('reports.fuel') }}" class="nav-link {{ request()->routeIs('reports.*')?'active':'' }}"><i class="fa-solid fa-chart-column"></i><span>Reports</span></a></li>
         @endcan
         @can('log-trips')
         <li class="nav-item"><a href="{{ route('trips.index') }}" class="nav-link {{ request()->routeIs('trips.*')?'active':'' }}"><i class="fa-solid fa-route"></i><span>Trips</span></a></li>

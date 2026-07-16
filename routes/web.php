@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\FuelLogController;
+use App\Http\Controllers\FuelReportController;
 use App\Http\Controllers\MaintenanceRecordController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
@@ -25,6 +26,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('drivers', DriverController::class);
         Route::resource('fuel-logs', FuelLogController::class)->except(['show']);
         Route::resource('maintenance', MaintenanceRecordController::class)->except(['show']);
+        Route::get('reports/fuel', [FuelReportController::class, 'index'])->name('reports.fuel');
     });
 
     Route::middleware('can:log-trips')->group(function () {
