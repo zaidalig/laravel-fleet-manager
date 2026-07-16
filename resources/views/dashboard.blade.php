@@ -1,0 +1,14 @@
+@extends('layouts.app')
+@section('title','Dashboard')@section('page_title','Fleet Dashboard')
+@section('content')
+<div class="row g-4 mb-4">
+@foreach([['Vehicles',$stats['vehicles'],'car','primary'],['Available',$stats['available'],'circle-check','success'],['Active Trips',$stats['active_trips'],'route','info'],['Fuel Cost (Month)','$'.number_format($stats['fuel_cost_month'],2),'gas-pump','warning'],['Maint. Due (Month)',$stats['maintenance_due'],'wrench','danger']] as $s)
+<div class="col-md-4 col-xl"><div class="card stat-card card-{{ $s[3] }} p-3"><div class="d-flex justify-content-between"><div><div class="text-muted small">{{ $s[0] }}</div><h3 class="fw-bold mb-0">{{ $s[1] }}</h3></div><div class="card-icon bg-{{ $s[3] }}-subtle text-{{ $s[3] }}"><i class="fa-solid fa-{{ $s[2] }}"></i></div></div></div></div>
+@endforeach
+</div>
+<div class="row g-4">
+<div class="col-lg-6"><div class="card card-table border-0"><div class="card-header bg-white fw-bold">Recent Trips</div><div class="table-responsive"><table class="table mb-0"><thead class="table-light"><tr><th>Trip</th><th>Vehicle</th><th>Driver</th><th>Status</th></tr></thead><tbody>@forelse($recentTrips as $t)<tr><td><a href="{{ route('trips.show',$t) }}" class="text-decoration-none fw-semibold">{{ $t->trip_number }}</a></td><td>{{ $t->vehicle->plate_number }}</td><td>{{ $t->driver->name }}</td><td>{{ ucfirst(str_replace('_',' ',$t->status)) }}</td></tr>@empty<tr><td colspan="4" class="text-center py-3 text-muted">No trips yet.</td></tr>@endforelse</tbody></table></div></div></div>
+<div class="col-lg-6"><div class="card card-table border-0"><div class="card-header bg-white fw-bold">Upcoming Maintenance</div><div class="table-responsive"><table class="table mb-0"><thead class="table-light"><tr><th>Vehicle</th><th>Title</th><th>Next Service</th></tr></thead><tbody>@forelse($upcomingMaintenance as $m)<tr class="{{ $m->isOverdue() ? 'table-danger' : '' }}"><td>{{ $m->vehicle->plate_number }}</td><td>{{ $m->title }}</td><td>{{ $m->next_service_date?->format('M d, Y') ?? '-' }}</td></tr>@empty<tr><td colspan="3" class="text-center py-3 text-muted">No upcoming maintenance.</td></tr>@endforelse</tbody></table></div></div></div>
+</div>
+<div class="card card-table border-0 mt-4"><div class="card-header bg-white fw-bold">Latest Activity</div><div class="table-responsive"><table class="table mb-0"><thead class="table-light"><tr><th>Action</th><th>Description</th><th>User</th><th>When</th></tr></thead><tbody>@foreach($recentLogs as $log)<tr><td><span class="badge bg-light text-dark border">{{ $log->action }}</span></td><td>{{ $log->description }}</td><td>{{ $log->user?->name ?? 'System' }}</td><td class="text-muted small">{{ $log->created_at->diffForHumans() }}</td></tr>@endforeach</tbody></table></div></div>
+@endsection

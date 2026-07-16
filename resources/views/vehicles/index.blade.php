@@ -1,0 +1,16 @@
+@extends('layouts.app')@section('title','Vehicles')@section('page_title','Vehicles')
+@section('content')
+<div class="d-flex justify-content-between mb-4"><p class="text-muted mb-0">Fleet vehicles and status.</p><a href="{{ route('vehicles.create') }}" class="btn btn-primary rounded-pill">Add Vehicle</a></div>
+<div class="card filter-card border-0 mb-4"><div class="card-body p-3"><form method="GET" class="row g-2">
+<div class="col-md-4"><input name="search" class="form-control" placeholder="Search plate, make, model" value="{{ request('search') }}"></div>
+<div class="col-md-2"><select name="type" class="form-select"><option value="">All Types</option>@foreach(['car','van','truck','bike'] as $t)<option value="{{ $t }}" @selected(request('type')===$t)>{{ ucfirst($t) }}</option>@endforeach</select></div>
+<div class="col-md-3"><select name="status" class="form-select"><option value="">All Status</option>@foreach(['available','in_use','maintenance','retired'] as $s)<option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>@endforeach</select></div>
+<div class="col-md-3 d-flex gap-2"><button class="btn btn-dark w-100">Filter</button>@if(request()->anyFilled(['search','type','status']))<a href="{{ route('vehicles.index') }}" class="btn btn-outline-secondary w-100">Clear</a>@endif</div>
+</form></div></div>
+<div class="card card-table border-0"><div class="table-responsive"><table class="table mb-0"><thead class="table-light"><tr><th>Plate</th><th>Make / Model</th><th>Type</th><th>Odometer</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+@forelse($vehicles as $v)
+<tr><td><a href="{{ route('vehicles.show',$v) }}" class="fw-bold text-decoration-none">{{ $v->plate_number }}</a></td><td>{{ $v->make }} {{ $v->model }}@if($v->year) ({{ $v->year }})@endif</td><td>{{ ucfirst($v->type) }}</td><td>{{ number_format($v->odometer) }} km</td><td><span class="badge {{ $v->status==='available'?'bg-success-subtle text-success':($v->status==='in_use'?'bg-info-subtle text-info':($v->status==='maintenance'?'bg-warning-subtle text-warning':'bg-secondary-subtle text-secondary')) }}">{{ ucfirst(str_replace('_',' ',$v->status)) }}</span></td>
+<td class="text-end"><a href="{{ route('vehicles.edit',$v) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a> <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-url="{{ route('vehicles.destroy',$v) }}" data-name="{{ $v->plate_number }}"><i class="fa-solid fa-trash"></i></button></td></tr>
+@empty<tr><td colspan="6" class="text-center py-4 text-muted">No vehicles found.</td></tr>@endforelse
+</tbody></table></div>@if($vehicles->hasPages())<div class="card-footer bg-white">{{ $vehicles->links() }}</div>@endif</div>
+@endsection
