@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use App\Services\MediaStorage;
 use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
@@ -44,7 +45,7 @@ class VehicleController extends Controller
         $data = $this->validated($request);
 
         if ($request->hasFile('photo')) {
-            $data['photo_path'] = $request->file('photo')->store('vehicle-photos', 'public');
+            $data['photo_path'] = MediaStorage::store($request->file('photo'), 'vehicle-photos');
         }
 
         $vehicle = Vehicle::create($data);
@@ -75,9 +76,9 @@ class VehicleController extends Controller
 
         if ($request->hasFile('photo')) {
             if ($vehicle->photo_path) {
-                Storage::disk('public')->delete($vehicle->photo_path);
+                MediaStorage::delete($vehicle->photo_path);
             }
-            $data['photo_path'] = $request->file('photo')->store('vehicle-photos', 'public');
+            $data['photo_path'] = MediaStorage::store($request->file('photo'), 'vehicle-photos');
         }
 
         $vehicle->update($data);
@@ -91,7 +92,7 @@ class VehicleController extends Controller
         $plate = $vehicle->plate_number;
 
         if ($vehicle->photo_path) {
-            Storage::disk('public')->delete($vehicle->photo_path);
+            MediaStorage::delete($vehicle->photo_path);
         }
 
         $vehicle->delete();
