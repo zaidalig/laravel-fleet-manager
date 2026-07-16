@@ -1,7 +1,9 @@
 @extends('layouts.app')@section('title',$vehicle->plate_number)@section('page_title',$vehicle->plate_number)
 @section('content')
 <div class="row g-4">
-<div class="col-lg-4"><div class="card p-4 border-0 shadow-sm"><h4 class="fw-bold mb-1">{{ $vehicle->make }} {{ $vehicle->model }}</h4><p class="text-muted mb-2">{{ $vehicle->plate_number }} · {{ ucfirst($vehicle->type) }}@if($vehicle->year) · {{ $vehicle->year }}@endif</p>
+<div class="col-lg-4"><div class="card p-4 border-0 shadow-sm">
+<div class="mb-3">@if($vehicle->photo_path)<img src="{{ asset('storage/'.$vehicle->photo_path) }}" alt="{{ $vehicle->plate_number }}" class="rounded" style="width:96px;height:96px;object-fit:cover;">@else<span class="rounded bg-light border d-inline-flex align-items-center justify-content-center" style="width:96px;height:96px;"><i class="fa-solid fa-car text-muted fs-2"></i></span>@endif</div>
+<h4 class="fw-bold mb-1">{{ $vehicle->make }} {{ $vehicle->model }}</h4><p class="text-muted mb-2">{{ $vehicle->plate_number }} · {{ ucfirst($vehicle->type) }}@if($vehicle->year) · {{ $vehicle->year }}@endif</p>
 <p class="mb-1"><i class="fa-solid fa-gauge-high me-2 text-muted"></i>{{ number_format($vehicle->odometer) }} km</p>
 <p class="mb-3"><span class="badge {{ $vehicle->status==='available'?'bg-success-subtle text-success':'bg-info-subtle text-info' }}">{{ ucfirst(str_replace('_',' ',$vehicle->status)) }}</span></p>
 @if($vehicle->notes)<p class="text-muted small">{{ $vehicle->notes }}</p>@endif

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
 {
@@ -40,7 +41,13 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
-        $vehicle = Vehicle::create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($request->hasFile('photo')) {
+            $data['photo_path'] = $request->file('photo')->store('vehicle-photos', 'public');
+        }
+
+        $vehicle = Vehicle::create($data);
 
         return redirect()->route('vehicles.index')
             ->with('success', "Vehicle \"{$vehicle->plate_number}\" created.");
@@ -64,7 +71,16 @@ class VehicleController extends Controller
 
     public function update(Request $request, Vehicle $vehicle)
     {
-        $vehicle->update($this->validated($request, $vehicle));
+        $data = $this->validated($request, $vehicle);
+
+        if ($request->hasFile('photo')) {
+            if ($vehicle->photo_path) {
+                Storage::disk('public')->delete($vehicle->photo_path);
+            }
+            $data['photo_path'] = $request->file('photo')->store('vehicle-photos', 'public');
+        }
+
+        $vehicle->update($data);
 
         return redirect()->route('vehicles.show', $vehicle)
             ->with('success', "Vehicle \"{$vehicle->plate_number}\" updated.");
@@ -73,6 +89,11 @@ class VehicleController extends Controller
     public function destroy(Vehicle $vehicle)
     {
         $plate = $vehicle->plate_number;
+
+        if ($vehicle->photo_path) {
+            Storage::disk('public')->delete($vehicle->photo_path);
+        }
+
         $vehicle->delete();
 
         return redirect()->route('vehicles.index')
@@ -90,6 +111,7 @@ class VehicleController extends Controller
             'status' => 'required|in:available,in_use,maintenance,retired',
             'odometer' => 'required|integer|min:0',
             'notes' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
     }
 }

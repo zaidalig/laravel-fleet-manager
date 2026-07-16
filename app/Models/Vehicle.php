@@ -11,7 +11,7 @@ class Vehicle extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'plate_number', 'make', 'model', 'year', 'type', 'status', 'odometer', 'notes',
+        'plate_number', 'make', 'model', 'year', 'type', 'status', 'odometer', 'notes', 'photo_path',
     ];
 
     public function trips(): HasMany
