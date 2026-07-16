@@ -70,4 +70,35 @@ class AuthAndAccessTest extends TestCase
 
         $this->actingAs($user)->get('/trips')->assertForbidden();
     }
+
+    public function test_owner_can_export_fuel_report(): void
+    {
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'owner-fuel@test.local',
+            'password' => 'password',
+            'role' => 'owner',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)->get('/reports/fuel')->assertOk();
+
+        $this->actingAs($user)->get('/reports/fuel?export=1')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->assertHeader('Content-Disposition', 'attachment; filename=fuel-report.csv');
+    }
+
+    public function test_driver_cannot_access_fuel_report(): void
+    {
+        $user = User::create([
+            'name' => 'Driver',
+            'email' => 'driver-fuel@test.local',
+            'password' => 'password',
+            'role' => 'driver',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)->get('/reports/fuel')->assertForbidden();
+    }
 }
