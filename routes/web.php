@@ -38,5 +38,5 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
     });
 
-    Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity.index');
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->middleware('can:manage-users')->name('activity.index');
 });

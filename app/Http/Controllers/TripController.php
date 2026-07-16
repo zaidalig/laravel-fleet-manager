@@ -11,13 +11,26 @@ class TripController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Trip::with(['vehicle', 'driver']);
+
+        if ($user->role === 'driver') {
+            $driver = Driver::where('user_id', $user->id)->first();
+            if (! $driver) {
+                $trips = Trip::whereRaw('0 = 1')->paginate(10);
+                $drivers = collect();
+                $vehicles = collect();
+
+                return view('trips.index', compact('trips', 'drivers', 'vehicles'));
+            }
+            $query->where('driver_id', $driver->id);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
-        if ($request->filled('driver_id')) {
+        if ($request->filled('driver_id') && $user->canManageFleet()) {
             $query->where('driver_id', $request->input('driver_id'));
         }
 
@@ -30,15 +43,20 @@ class TripController extends Controller
         }
 
         $trips = $query->latest('started_at')->paginate(10)->withQueryString();
-        $drivers = Driver::where('status', 'active')->orderBy('name')->get();
+        $drivers = $user->canManageFleet()
+            ? Driver::where('status', 'active')->orderBy('name')->get()
+            : collect();
         $vehicles = Vehicle::orderBy('plate_number')->get();
 
         return view('trips.index', compact('trips', 'drivers', 'vehicles'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $drivers = Driver::where('status', 'active')->orderBy('name')->get();
+        $user = $request->user();
+        $drivers = $user->canManageFleet()
+            ? Driver::where('status', 'active')->orderBy('name')->get()
+            : Driver::where('user_id', $user->id)->where('status', 'active')->get();
         $vehicles = Vehicle::whereIn('status', ['available', 'in_use'])->orderBy('plate_number')->get();
 
         return view('trips.create', compact('drivers', 'vehicles'));
@@ -46,6 +64,7 @@ class TripController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
         $data = $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
             'driver_id' => 'required|exists:drivers,id',
@@ -58,10 +77,15 @@ class TripController extends Controller
             'status' => 'required|in:planned,in_progress,completed,cancelled',
         ]);
 
+        if ($user->role === 'driver') {
+            $driver = Driver::where('user_id', $user->id)->first();
+            abort_unless($driver && (int) $data['driver_id'] === (int) $driver->id, 403);
+        }
+
         $next = (Trip::max('id') ?? 0) + 1;
         $data['trip_number'] = 'TRP-'.str_pad((string) $next, 5, '0', STR_PAD_LEFT);
         $data['distance_km'] = $data['distance_km'] ?? 0;
-        $data['user_id'] = $request->user()->id;
+        $data['user_id'] = $user->id;
 
         $trip = Trip::create($data);
 
@@ -73,8 +97,9 @@ class TripController extends Controller
             ->with('success', "Trip {$trip->trip_number} created.");
     }
 
-    public function show(Trip $trip)
+    public function show(Request $request, Trip $trip)
     {
+        $this->authorizeDriverTrip($request, $trip);
         $trip->load(['vehicle', 'driver', 'user', 'fuelLogs']);
 
         return view('trips.show', compact('trip'));
@@ -82,6 +107,8 @@ class TripController extends Controller
 
     public function updateStatus(Request $request, Trip $trip)
     {
+        $this->authorizeDriverTrip($request, $trip);
+
         $data = $request->validate([
             'status' => 'required|in:planned,in_progress,completed,cancelled',
             'ended_at' => 'nullable|date',
@@ -108,5 +135,16 @@ class TripController extends Controller
         }
 
         return back()->with('success', 'Trip status updated.');
+    }
+
+    private function authorizeDriverTrip(Request $request, Trip $trip): void
+    {
+        $user = $request->user();
+        if ($user->canManageFleet()) {
+            return;
+        }
+
+        $driver = Driver::where('user_id', $user->id)->first();
+        abort_unless($driver && (int) $trip->driver_id === (int) $driver->id, 403);
     }
 }
