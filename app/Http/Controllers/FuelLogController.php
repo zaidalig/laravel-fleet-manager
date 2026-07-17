@@ -25,7 +25,8 @@ class FuelLogController extends Controller
             $query->whereDate('fueled_at', '<=', $request->input('to'));
         }
 
-        $fuelLogs = $query->latest('fueled_at')->paginate(10)->withQueryString();
+        [$perPage, $sort, $direction] = $this->listQueryParams($request, ['fueled_at', 'liters', 'cost', 'created_at'], 'fueled_at');
+        $fuelLogs = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
         $vehicles = Vehicle::orderBy('plate_number')->get();
 
         return view('fuel-logs.index', compact('fuelLogs', 'vehicles'));

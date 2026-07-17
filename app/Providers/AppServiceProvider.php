@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,6 +15,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         Gate::define('manage-users', fn ($user) => $user->canManageUsers());
         Gate::define('manage-fleet', fn ($user) => $user->canManageFleet());
         Gate::define('log-trips', fn ($user) => $user->canLogTrips());

@@ -13,11 +13,12 @@ class TripController extends Controller
     {
         $user = $request->user();
         $query = Trip::with(['vehicle', 'driver']);
+        [$perPage, $sort, $direction] = $this->listQueryParams($request, ['started_at', 'ended_at', 'distance_km', 'status', 'created_at'], 'started_at');
 
         if ($user->role === 'driver') {
             $driver = Driver::where('user_id', $user->id)->first();
             if (! $driver) {
-                $trips = Trip::whereRaw('0 = 1')->paginate(10);
+                $trips = Trip::whereRaw('0 = 1')->paginate($perPage)->withQueryString();
                 $drivers = collect();
                 $vehicles = collect();
 
@@ -42,7 +43,7 @@ class TripController extends Controller
             $query->whereDate('started_at', $request->input('date'));
         }
 
-        $trips = $query->latest('started_at')->paginate(10)->withQueryString();
+        $trips = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
         $drivers = $user->canManageFleet()
             ? Driver::where('status', 'active')->orderBy('name')->get()
             : collect();

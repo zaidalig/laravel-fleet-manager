@@ -24,7 +24,8 @@ class MaintenanceRecordController extends Controller
             $query->whereDate('service_date', '<=', $request->input('to'));
         }
 
-        $records = $query->latest('service_date')->paginate(10)->withQueryString();
+        [$perPage, $sort, $direction] = $this->listQueryParams($request, ['service_date', 'cost', 'created_at'], 'service_date');
+        $records = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
         $vehicles = Vehicle::orderBy('plate_number')->get();
 
         return view('maintenance.index', compact('records', 'vehicles'));

@@ -30,7 +30,8 @@ class VehicleController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $vehicles = $query->latest()->paginate(10)->withQueryString();
+        [$perPage, $sort, $direction] = $this->listQueryParams($request, ['plate_number', 'make', 'model', 'status', 'created_at'], 'created_at');
+        $vehicles = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
 
         return view('vehicles.index', compact('vehicles'));
     }
