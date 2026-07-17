@@ -25,7 +25,8 @@ class DriverController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $drivers = $query->latest()->paginate(10)->withQueryString();
+        [$perPage, $sort, $direction] = $this->listQueryParams($request, ['name', 'license_number', 'status', 'created_at'], 'created_at');
+        $drivers = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
 
         return view('drivers.index', compact('drivers'));
     }
